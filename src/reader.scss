@@ -1,0 +1,19 @@
+.header{
+    height:12vh;
+    width: 100%;
+}
+.main{
+    height: 80vh;
+    width: 100%;
+    display: flex;
+    .read{
+        flex: 1;
+        display: flex;
+    }
+
+}
+
+.bottom{
+    height: 8vh;
+    width: 100%;
+}

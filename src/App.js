@@ -1,24 +1,14 @@
-import logo from './logo.svg';
-import './App.css';
+import Reader from './Reader';
 
-function App() {
+function App({kuroshiro}) {
   return (
+    <>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
     </div>
+    <Reader kuroshiro={kuroshiro}/>
+    </>
+
   );
 }
 
