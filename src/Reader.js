@@ -68,9 +68,6 @@ const Reader = ({kuroshiro}) => {
     useEffect(() => {
         let debouncedResize = null;
         if (bookData) {
-            if(bookrendition){
-                bookrendition.clear();
-            }
             const book = ePub(bookData);
             const rendition = book.renderTo("read", {
                 width: window.innerWidth,

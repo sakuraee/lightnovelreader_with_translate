@@ -4,7 +4,7 @@ import md5 from "blueimp-md5";
 const APPID = process.env.REACT_APP_BAIDUAPPID;
 const APPKEY = process.env.REACT_APP_BAIDUAPPKEY;
 const getStrTranslate = (rawStr , from = "jp") => {
-    const salt = String(Math.floor(Math.random() * 10))   
+    const salt = String(Math.floor(Math.random() * 100000000))   
     const sign = md5(APPID + rawStr +salt + APPKEY)
     console.log("HELLO");
     console.log(APPID);
