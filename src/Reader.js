@@ -1,43 +1,45 @@
 import React, { useRef, useEffect, useState } from 'react';
 import ePub from 'epubjs';
-import "./reader.scss"
 import getStrTranslate from "./request";
-import { Button }from"antd";
-import { PlayCircleOutlined } from '@ant-design/icons';
+import { Button, Checkbox, Modal, Tooltip } from "antd";
+import { StarOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import debounce from 'lodash.debounce';
+import WordsCollection from './component/WordsCollection';
+import AudioButton from './component/AudioButton';
+import log from './utils/log';
+import { addWordToDatabase } from './utils/db';
+import "./reader.scss"
+const TIPTEXT = "框选语句即可以获取读音以及翻译"
+const EPUBURL = '../負けヒロインが多すぎる！ (ガガガ文庫) (雨森たきび) (Z-Library).epub'
+const DEBOUNCE_WAIT = 200;
 
-// 初始化
-// 这里使用了async/await, 你同样也可以使用Promise
 
-const Reader = ({kuroshiro}) => {
-    //const result = kuroshiro.convert("感じ取れたら手を繋ごう、重なるのは人生のライン and レミリア最高！", { to: "hiragana" });
-
+const Reader = ({ kuroshiro }) => {
     const fileInputRef = useRef(null);
     const [selectionText, setSelectionText] = useState("");
     const [bookrendition, setBookRendition] = useState(null);
-    const [hiraganaText ,setHiraganaText] = useState(null);
+    const [hiraganaText, setHiraganaText] = useState(null);
     const [translatedText, setTranslatedText] = useState("")
-    const audioRef = useRef(null);
     const [audioSrc, setAudioSrc] = useState("");
     const [bookData, setBookData] = useState(null);
-    const epubUrl = '../負けヒロインが多すぎる！ (ガガガ文庫) (雨森たきび) (Z-Library).epub'
-    const DEBOUNCE_WAIT = 200;
+
+    const [collectionModal, setCollectionModal] = useState(false);
 
     const fliterRbText = (innerHTMLStr) => {
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = innerHTMLStr;
         const rbNodes = tempDiv.querySelectorAll('rb');
-        console.log("nodes");
-        console.log(rbNodes);
+        log.info("nodes");
+        log.info(rbNodes);
         return Array.from(rbNodes).map(node => node.textContent).join("");
     }
 
     useEffect(() => {
         const fetchEpub = async () => {
-            console.log("fetchEpub");
-            
+            log.info("fetchEpub");
+
             try {
-                const response = await fetch(epubUrl);
+                const response = await fetch(EPUBURL);
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
@@ -47,24 +49,25 @@ const Reader = ({kuroshiro}) => {
                 console.error('Failed to load EPUB:', error);
             }
         };
+        log.info(localStorage.getItem('bookProgress'));
+        ;
         fetchEpub();
 
     }, []);
     useEffect(() => {
         if (selectionText) {
-            setAudioSrc(`http://dict.youdao.com/dictvoice?le=jap&audio=${selectionText}&type=2`) 
-            console.log(`http://dict.youdao.com/dictvoice?le=jap&audio=${selectionText}&type=2`);
-            
+            setAudioSrc(`http://dict.youdao.com/dictvoice?le=jap&audio=${selectionText}&type=2`)
+
             getStrTranslate(selectionText).then((res) => {
-                console.log(res);
+                log.info(res);
                 setTranslatedText(res);
             })
-            if(kuroshiro){
+            if (kuroshiro) {
                 kuroshiro.convert(selectionText, { to: "hiragana" }).then(setHiraganaText);
             }
         }
     }, [selectionText]);
-
+    let firstLoad = 1;
     useEffect(() => {
         let debouncedResize = null;
         if (bookData) {
@@ -73,7 +76,16 @@ const Reader = ({kuroshiro}) => {
                 width: window.innerWidth,
                 height: window.innerHeight * 0.80,
             })
-            rendition.display();
+            if (firstLoad === 1 && localStorage.getItem('autoSaveProgress') === "true" && localStorage.getItem('bookProgress')) {
+                rendition.display(localStorage.getItem('bookProgress'));
+                log.info("asd23123");
+                log.info(localStorage.getItem('bookProgress'));
+
+                firstLoad = 0;
+            } else {
+                rendition.display();
+            }
+
             let selectHandle = (_, Contents) => {
                 let selection = Contents.document.getSelection();
                 if (selection.rangeCount > 0) {
@@ -97,10 +109,15 @@ const Reader = ({kuroshiro}) => {
             setBookRendition(rendition);
             function resizeHandler() {
                 if (rendition) {
-                    console.log('Window resized, adjusting rendition size...');
+                    log.info('Window resized, adjusting rendition size...');
                     rendition.resize(window.innerWidth, window.innerHeight * 0.80);
                 }
             };
+            function saveProgressBeforeUnload() {
+                localStorage.setItem('bookProgress', rendition.location.start.cfi);
+            };
+
+            window.addEventListener('beforeunload', saveProgressBeforeUnload)
             debouncedResize = debounce(resizeHandler, DEBOUNCE_WAIT);
             window.addEventListener('resize', debouncedResize);
         }
@@ -135,29 +152,58 @@ const Reader = ({kuroshiro}) => {
     };
 
     const handleNext = () => {
+        log.info(bookrendition.location.start.cfi);
         if (bookrendition) {
             bookrendition.next();
         }
     };
-
-
+    const handleAutoSaveChange = (e) => {
+        if (e.target.checked == false) {
+            localStorage.removeItem("bookProgress");
+        }
+        localStorage.setItem("autoSaveProgress", e.target.checked)
+    }
+    const saveCurrentWords = () => {
+        let item = {
+            text: selectionText,
+            audioSrc,
+            translatedText,
+            hiraganaText
+        }
+        addWordToDatabase(item);
+        log.info(item);
+        
+    }
     return (
         <div>
-            <div className='header'><input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".epub" />
+            <div className='header'><div><input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".epub" />
                 <div>{selectionText}</div>
                 <div>{translatedText}</div>
                 <div>{hiraganaText}</div>
-                <div></div>
-                <Button type="primary" icon={<PlayCircleOutlined />}  shape="circle" onClick={()=>audioRef.current.play()}/>
-                <audio
-                    ref={audioRef}
-                    src={audioSrc}
-                    preload="true"
-                />
+                {selectionText && (<>
+                    <AudioButton audioSrc={audioSrc}/>
+                    <Button icon={<StarOutlined />} shape="circle" onClick={saveCurrentWords} />
+                </>
+                )}
+            </div>
+                <div className="operations">
+                    <Tooltip title={TIPTEXT}>
+                        <Button icon={<QuestionCircleOutlined />} shape="circle" />
+                    </Tooltip>
+                    <div>
+                        <Button icon={<StarOutlined />} shape="circle" onClick={() => setCollectionModal(true)} />
+                        <span>词句收藏夹</span>
+                    </div>
+                    <Checkbox onChange={handleAutoSaveChange} defaultChecked={localStorage.getItem("autoSaveProgress") === "true"}>自动保存阅读进度</Checkbox>
+                </div>
             </div>
             <div className='main'><div id="read"></div></div>
             <div className='bottom'><button onClick={handlePrev} disabled={!bookrendition}>Prev</button>
                 <button onClick={handleNext} disabled={!bookrendition}>Next</button></div>
+
+            <Modal open={collectionModal} footer={null} onCancel={() => setCollectionModal(false)}><WordsCollection /></Modal>
+
+
         </div>
     );
 };

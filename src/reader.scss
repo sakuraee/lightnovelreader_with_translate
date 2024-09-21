@@ -1,6 +1,16 @@
 .header{
     height:12vh;
     width: 100%;
+    display: flex;
+    justify-content: space-between;
+
+    .operations{
+        display: flex;
+        height: 2em ;
+        > * {
+            margin: 5px;
+          }
+    }
 }
 .main{
     height: 80vh;

@@ -8,8 +8,7 @@ import KuromojiAnalyzer from "kuroshiro-analyzer-kuromoji";
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 const kuroshiro = new Kuroshiro();
-// ...
-console.log(123123);
+
 
 kuroshiro.init(new KuromojiAnalyzer({ dictPath: "/dict" })).then(() => {
   console.log("Kuroshiro is ready!")
