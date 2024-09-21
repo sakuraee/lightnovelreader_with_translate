@@ -9,6 +9,7 @@
     "@testing-library/user-event": "^13.5.0",
     "antd": "^5.20.6",
     "blueimp-md5": "^2.19.0",
+    "cross-env": "^7.0.3",
     "epubjs": "^0.3.93",
     "jsonp": "^0.2.1",
     "kuroshiro": "^1.2.0",
