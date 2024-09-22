@@ -1,8 +1,10 @@
 
-### `npm start`
+### `npm install && npm start`
 
 Runs the app in the development mode.
 Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+
+可以通过本项目自己的vercel在线部署的预览结果。
 
 阅读日语轻小说epub的页面可在线使用（以导入你自己的epub的方式），并且整合了读音翻译和假名 ，
 
